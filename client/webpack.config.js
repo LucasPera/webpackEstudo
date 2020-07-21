@@ -3,8 +3,20 @@ const babiliPlugin = require('babili-webpack-plugin');
 const extractTextPlugin = require('extract-text-webpack-plugin');
 const optimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const webpack = require('webpack');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 let plugins = [];
+
+plugins.push(new HtmlWebpackPlugin({
+    hash: true,
+    minify: { //minificar
+        html5: true,
+        collapseWhitespace: true,
+        removeComments: true,
+    },    
+    filename: 'index.html',
+    template: __dirname + '/main.html'
+}));
 
 plugins.push(new extractTextPlugin('styles.css'));
 
@@ -16,7 +28,18 @@ plugins.push(
     })
 );
 
+//cria um modulo apenas para bibliotecas de terceiros
+plugins.push(new webpack.optimize.CommonsChunkPlugin({
+    
+    name: 'vendor',
+    filename: 'vendor.bundle.js'
+}))
+
+
 if(process.env.NODE_ENV == 'production') {
+
+    plugins.push(new webpack.optimize.ModuleConcatenationPlugin());
+
     plugins.push(new babiliPlugin());
 
     //para mimificar css
@@ -33,11 +56,13 @@ if(process.env.NODE_ENV == 'production') {
 
 module.exports = {
     //ponto de inicio do programa
-    entry: './app-src/app.js',
+    entry: {
+        app: './app-src/app.js',
+        vendor: ['jquery', 'bootstrap', 'reflect-metadata']
+    },
     output: {
         filename: 'bundle.js',
-        path: path.resolve(__dirname, 'dist'), //diretorio atual
-        publicPath: 'dist'
+        path: path.resolve(__dirname, 'dist') //diretorio atual
     },
     module: {
         rules: [
